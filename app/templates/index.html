@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+{% block title %}信息技术教学网 - 首页{% endblock %}
+{% block page_content %}
+<div class="page-header">
+	<h1>
+		欢迎 
+		{% if current_user.is_authenticated %}
+			{% if current_user.role_id == 2 or current_user.role_id == 4 %}
+				{{ current_user.username }}同学
+			{% else %}
+				{{ current_user.tea_name }}老师
+			{% endif %}
+		{% else %}
+			您
+		{% endif %}！
+	</h1>
+	<h2>湛江一中培才学校信息技术教学网</h2>
+</div>
+<div class="post-tabs">
+    <h3>新闻</h3>
+    {% include '_posts.html' %}
+    {% if pagination and current_user.is_authenticated %}
+	<div class="pagination">
+		{{ macros.pagination_widget(pagination, '.index') }}
+	</div>
+	{% endif %}
+</div>
+{% endblock %}

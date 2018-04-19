@@ -1,0 +1,111 @@
+
+.profile-thumbnail {
+    position: absolute;
+}
+.profile-header {
+    min-height: 260px;
+    margin-left: 280px;
+}
+li {
+	list-style-type: none;
+}
+ul.posts {
+    list-style-type: none;
+    padding: 0px;
+    margin: 16px 0px 0px 0px;
+    border-top: 1px solid #e0e0e0;
+}
+ul.posts li.post {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+ul.posts li.post:hover {
+    background-color: #f0f0f0;
+}
+div.post-date {
+    float: right;
+}
+div.post-content {
+    margin-left: 16px;
+    min-height: 48px;
+}
+div.post-tabs {
+    margin-top: 16px;
+}
+div.post-footer {
+    text-align: right;
+}
+div.page-body {
+	position: relative;
+}
+div.page-footer {
+	position: relative;
+	bottom: 0;
+	clear: both;
+	margin-left: 48px;
+	margin-right: 48px;
+	text-align: center;
+}
+div.pagination {
+    width: 100%;
+    text-align: right;
+    padding: 0px;
+    margin: 0px;
+}
+div.flask-pagedown-preview {
+    margin: 10px 0px 10px 0px;
+    border: 1px solid #e0e0e0;
+    padding: 4px;
+}
+div.flask-pagedown-preview h1 {
+    font-size: 140%;
+}
+div.flask-pagedown-preview h2 {
+    font-size: 130%;
+}
+div.flask-pagedown-preview h3 {
+    font-size: 120%;
+}
+.post-body h1 {
+    font-size: 140%;
+}
+.post-body h2 {
+    font-size: 130%;
+}
+.post-body h3 {
+    font-size: 120%;
+}
+a:hover {
+	text-decoration: none;
+}
+#students
+{
+	border-collapse:collapse;
+	width:700px;
+}
+#students td, #students th
+{
+	border: 1px solid black;
+}
+#students td
+{
+	text-align:center;
+	height:20px;
+	padding:5px;
+}
+#groups
+{
+	border-collapse:collapse;
+	width:80%;
+}
+#groups td, #groups th
+{
+	border: 1px solid black;
+}
+#groups td
+{
+	text-align:left;
+	height:20px;
+	padding:5px;
+	font-size:120%
+}

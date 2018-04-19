@@ -1,0 +1,102 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}信息技术教学网 - 湛江一中培才学校{% endblock %}
+{% block head %}
+	{{ super() }}
+	<link rel="shortcut icon" href="{{ url_for('static', filename = 'favicon.ico') }}" type="image/x-icon">
+	<link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}" type="image/x-icon">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+{% endblock %}
+{% block scripts %}
+	{{ super() }}
+{% endblock %}
+{% block navbar %}
+<div class="navbar navbar-inverse" role="navigation">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle"
+				data-toggle="collapse" data-target=".navbar-collapse">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/">主页</a>
+		</div>
+		<div class="navbar-collapse collapse">
+			<ul class="nav navbar-nav">
+				<li><a href="{{ url_for('main.courses') }}">在线课堂</a></li>
+				{% if current_user.is_authenticated %}
+					{% if current_user.role_id == 2 or current_user.role_id == 4 %}
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown">学生中心<b class="caret"></b></a>
+							<ul class="dropdown-menu">
+								<li><a href="{{ url_for('stu.user', id=current_user.id) }}">个人信息</a></li>
+								<li><a href="{{ url_for('stu.workupload') }}">提交作业</a></li>
+								{% if current_user.role_id == 2 %}
+									<li><a href="{{ url_for('stu.groupworkeva') }}">作业评价</a></li>
+								{% endif %}
+							</ul>
+						</li>
+						<li><a href="{{ url_for('main.beforetestinst') }}">期末考试</a></li>
+					{% endif %}
+					{% if current_user.role_id == 1 or current_user.role_id == 3 %}
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown">教师中心<b class="caret"></b></a>
+							<ul class="dropdown-menu">
+								<li><a href="{{ url_for('tea.edit_news') }}">新闻管理</a></li>
+								{% if current_user.role_id == 1 %}
+									<li><a href="{{ url_for('auth.registerteacher') }}">教师管理</a></li>
+									<li><a href="{{ url_for('auth.registerclasses') }}">班级管理</a></li>
+									<li><a href="{{ url_for('auth.register') }}">学生管理</a></li>
+									<li><a href="{{ url_for('auth.registercourse') }}">课程管理</a></li>
+									<li><a href="{{ url_for('auth.testpapermanage') }}">考题管理</a></li>
+								{% else %}
+									<li><a href="{{ url_for('tea.classmanage', id=current_user.id) }}">班级管理</a></li>
+									<li><a href="{{ url_for('tea.studentmanage', id=current_user.id) }}">学生管理</a></li>
+									<li><a href="{{ url_for('tea.systemconfig') }}">系统管理</a></li>
+									<li><a href="{{ url_for('tea.groupperformance') }}">小组表现</a></li>
+									<li><a href="{{ url_for('tea.classworkeva') }}">作业评价</a></li>
+									<li><a href="{{ url_for('tea.testpapergen') }}">考题管理</a></li>
+								{% endif %}
+							</ul>
+						</li>
+						{% if current_user.role_id == 3 %}
+							<li><a href="{{ url_for('main.russianroulette') }}">随机点名</a></li>
+						{% endif %}
+					{% endif %}
+				{% endif %}
+				<li><a href="{{ url_for('main.microlesson') }}">微课超市</a></li>
+			</ul>
+			<ul class="nav navbar-nav navbar-right">
+				{% if current_user.is_authenticated %}
+				<li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">账号管理<b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+						<li><a href="{{ url_for('auth.change_password') }}">更改密码</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}">注销</a></li>
+                    </ul>
+                </li>
+				{% else %}
+				<li><a href="{{ url_for('auth.login') }}">登录</a></li>
+				{% endif %}
+			</ul>
+		</div>
+	</div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container">
+	{% for message in get_flashed_messages() %}
+	<div class="alert alert-success" role="alert">
+		<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+			<span aria-hidden="true">&times;</span></button>
+		{{ message }}
+	</div>
+	{% endfor %}
+	{% block page_content %}{% endblock %}
+	{% include '_footer.html' %}
+</div>
+{% endblock %}
