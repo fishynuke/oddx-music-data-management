@@ -2,8 +2,8 @@
 {% block title %}music data manager{% endblock %}
 {% block head %}
 	{{ super() }}
-	<link rel="shortcut icon" href="{{ url_for('static', filename = 'icon.svg') }}" type="image/x-icon">
-	<link rel="icon" href="{{ url_for('static', filename = 'icon.svg') }}" type="image/x-icon">
+	<link rel="shortcut icon" href="{{ url_for('static', filename = 'icon.png') }}" type="image/x-icon">
+	<link rel="icon" href="{{ url_for('static', filename = 'icon.png') }}" type="image/x-icon">
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 {% endblock %}
 {% block scripts %}
@@ -28,6 +28,7 @@
 		<div class="navbar-collapse collapse">
 			<ul class="nav navbar-nav">
 				<li><a href="{{ url_for('main.management') }}">查看与编辑</a></li>
+				<li><a href="{{ url_for('main.add') }}">添加新项</a></li>
 				<li><a href="{{ url_for('main.exporter') }}">导出下载</a></li>
 			</ul>
 		</div>
