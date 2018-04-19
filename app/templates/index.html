@@ -1,30 +1,22 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
-{% import "_macros.html" as macros %}
-{% block title %}信息技术教学网 - 首页{% endblock %}
+{% block title %}music data manager{% endblock %}
 {% block page_content %}
 <div class="page-header">
-	<h1>
-		欢迎 
-		{% if current_user.is_authenticated %}
-			{% if current_user.role_id == 2 or current_user.role_id == 4 %}
-				{{ current_user.username }}同学
-			{% else %}
-				{{ current_user.tea_name }}老师
-			{% endif %}
-		{% else %}
-			您
-		{% endif %}！
-	</h1>
-	<h2>湛江一中培才学校信息技术教学网</h2>
-</div>
-<div class="post-tabs">
-    <h3>新闻</h3>
-    {% include '_posts.html' %}
-    {% if pagination and current_user.is_authenticated %}
-	<div class="pagination">
-		{{ macros.pagination_widget(pagination, '.index') }}
-	</div>
+	<h1>欢迎使用ODDX music data manager！</h1>
+	{% if version %}
+		<h3>最新文件修改时间：{{ version.modtime }}<br>
+		版本：{{ gtext }}</h3>
+	{% else %}
+		<h3>暂时没有数据，请上传新文件。</h3>
 	{% endif %}
+</div>
+<div class="row">
+	<h3>&nbsp;&nbsp;注意：上传新文件会将数据库内原有数据清除。</h3>
+</div>
+<div class="row">
+	<div class="col-md-4">
+		{{ wtf.quick_form(form) }}
+	</div>
 </div>
 {% endblock %}

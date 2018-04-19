@@ -1,24 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, SelectField, BooleanField
-from wtforms.validators import Required, Length, Regexp
-from flask_pagedown.fields import PageDownField
-from ..models import Role, User
+from wtforms import SubmitField
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 
-class EditProfileAdminForm(FlaskForm):
-	username = StringField('Username', validators=[Required(), Length(1, 64)])
-	confirmed = BooleanField('Confirmed')
-	role = SelectField('Role', coerce=int)
-	name = StringField('Real name', validators=[Length(0, 64)])
-	location = StringField('Location', validators=[Length(0, 64)])
-	about_me = TextAreaField('About me')
-	submit = SubmitField('Submit')
+class WorkUploadForm(FlaskForm):
+	workfile = FileField('上传文件')
+	submit = SubmitField('提交')
 	
-	def __init__(self, user, *args, **kwargs):
-		super(EditProfileAdminForm, self).__init__(*args, **kwargs)
-		self.role.choices = [(role.id, role.name)
-			for role in Role.query.order_by(Role.name).all()]
-		self.user = user
-		
-	def validate_username(self, field):
-		if field.data != self.user.username and User.query.filter_by(username=field.data).first():
-			raise ValidationError('Username already in use.')
+	def __init__(self, *args, **kwargs):
+		super(WorkUploadForm, self).__init__(*args, **kwargs)
+		self.workfile.validators = [FileRequired(), FileAllowed(['bin'], '文件格式不正确，应为bin')]

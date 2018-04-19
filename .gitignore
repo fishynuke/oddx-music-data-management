@@ -106,4 +106,4 @@ stuwork/
 *.sqlite
 migrations/
 
-.vscode
+.vscode/
