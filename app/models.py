@@ -17,7 +17,7 @@ class Song(db.Model):
 	alias = db.Column(db.String(128), index=True)
 	genre = db.Column(db.String(128), index=True)
 	artist = db.Column(db.String(128), index=True)
-	version = db.Column(db.String(32), index=True)
+	version = db.Column(db.Integer)
 	spn = db.Column(db.Integer)
 	sph = db.Column(db.Integer)
 	spa = db.Column(db.Integer)
@@ -29,6 +29,7 @@ class Song(db.Model):
 	bgadelay = db.Column(db.Integer)
 	bganame = db.Column(db.String(32), index=True)
 	font = db.Column(db.Integer)
+	fontcolor = db.Column(db.Integer)
 	otherfolder = db.Column(db.Boolean, default=False)
 
 	def __repr__(self):

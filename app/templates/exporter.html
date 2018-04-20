@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}music data manager - exporter{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>信息导出与下载</h1>
+</div>
+{% if songs == [] %}
+<div>
+	<h3>还没有数据，请上传文件</h3>
+</div>
+{% else %}
+<div class="row">
+	<div class="col-md-16">
+		<table align="center" id="students">
+			<tr><td>歌曲ID</td>
+			<td>标题</td>
+			<td>英文标题</td>
+			<td>曲风</td>
+			<td>艺术家</td>
+			<td>版本</td>
+			<td>SPN</td>
+			<td>SPH</td>
+			<td>SPA</td>
+			<td>DPN</td>
+			<td>DPH</td>
+			<td>DPA</td>
+			<td>SPB</td>
+			<td>音量</td>
+			<td>BGA延迟</td>
+			<td>BGA名称</td>
+			<td>字体编号</td>
+			<td>字体颜色</td>
+			<td>OTHERS文件夹</td></tr>
+			{% for song in songs %}
+			<tr><td>{{ '%05d' % song.songid }}</td>
+			<td>{{ converted_titles[song.id-1] }}</td>
+			<td>{{ converted_aliases[song.id-1] }}</td>
+			<td>{{ converted_genres[song.id-1] }}</td>
+			<td>{{ converted_artists[song.id-1] }}</td>
+			<td>{{ vername[song.version] }}</td>
+			<td>{{ song.spn }}</td>
+			<td>{{ song.sph }}</td>
+			<td>{{ song.spa }}</td>
+			<td>{{ song.dpn }}</td>
+			<td>{{ song.dph }}</td>
+			<td>{{ song.dpa }}</td>
+			<td>{{ song.spb }}</td>
+			<td>{{ song.volume }}</td>
+			<td>{{ song.bgadelay }}</td>
+			<td>{{ converted_bganames[song.id-1] }}</td>
+			<td>{{ song.font }}</td>
+			<td>{{ converted_fontcolors[song.id-1] }}</td>
+			<td>{{ song.otherfolder }}</td></tr>
+			{% endfor %}
+		</table>
+	</div>
+</div>
+{% endif %}
+{% endblock %}

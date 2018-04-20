@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}music data manager - management{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>歌曲总览</h1>
+</div>
+{% if songs == [] %}
+<div>
+	<h3>还没有数据，请上传文件</h3>
+</div>
+{% else %}
+<div class="row">
+	<div class="col-md-8">
+		<table id="students">
+		{% for i in range(0, vername|length) %}
+			<tr><td>{{ vername[i] }}</td></tr>
+			<tr><td><ul>
+				{% for song in songs[i] %}
+					<li>{{ '%05d' % song.songid }}　
+						<a href="{{ url_for('main.music', id=song.id) }}" target="_blank">
+							{{ converted_titles[i][songs[i].index(song)] }}</a></li>
+				{% endfor %}
+			</ul></td></tr>
+		{% endfor %}
+		</table>
+	</div>
+</div>
+{% endif %}
+{% endblock %}
