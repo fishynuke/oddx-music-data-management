@@ -1,7 +1,7 @@
 import os, time, math
 from flask import current_app, render_template, redirect, url_for, flash, request, abort
 from . import main
-from .forms import WorkUploadForm, EditMusicForm
+from .forms import WorkUploadForm, EditMusicForm, SearchForm, EditHeaderForm
 from .. import db
 from ..models import Version, Song, Rawdata
 from flask_sqlalchemy import get_debug_queries
@@ -131,6 +131,7 @@ def index():
 			if bgadelay > 32767:
 				bgadelay = bgadelay - 65536
 			bganame = data.block7[28:48].rstrip(b'\x00')
+
 			song = Song(title=title, alias=alias, genre=genre, artist=artist, version=version,
 				spn=spn, sph=sph, spa=spa, dpn=dpn, dph=dph, dpa=dpa, spb=spb, songid=songid, volume=vol,
 				bgadelay=bgadelay, bganame=bganame, font=font, fontcolor=fontcolor, otherfolder=otherfolder)
@@ -139,11 +140,12 @@ def index():
 		return redirect(url_for('.index'))
 	return render_template('index.html', form=form, version=version, gtext=gamever_text)
 
-@main.route('/management')
+@main.route('/management', methods=['GET', 'POST'])
 def management():
 	allsongs = Song.query.all()
 	songs = []
 	converted_titles = []
+	form = SearchForm()
 	if allsongs != []:
 		for i in range(0, len(vername)):
 			songs.append([])
@@ -155,8 +157,16 @@ def management():
 						converted_titles[i].append(song.title.decode('shift-jis'))
 					except UnicodeDecodeError as e:
 						print(song.title[:e.start] + song.title[e.end:])
+	
+	if form.validate_on_submit():
+		searcher = Song.query.filter_by(songid=form.songid.data).first()
+		if searcher is None:
+			flash('找不到歌曲')
+		else:
+			return redirect(url_for('.music', id=searcher.id))
+	
 	return render_template('management.html', vername=vername, songs=songs, 
-		converted_titles=converted_titles)
+		converted_titles=converted_titles, form=form)
 
 @main.route('/music/<int:id>', methods=['GET', 'POST'])
 def music(id):
@@ -188,7 +198,8 @@ def music(id):
 		converted_bganame = song.bganame
 	converted_fontcolor = [math.floor(song.fontcolor / 1000000), 
 		math.floor(song.fontcolor / 1000) % 1000, song.fontcolor % 1000]
-	form = EditMusicForm(song, vername)
+	form = EditMusicForm(vername)
+
 	if form.validate_on_submit():
 		if song.songid != form.songid.data:
 			check_song = Song.query.filter_by(songid=form.songid.data).first()
@@ -216,7 +227,9 @@ def music(id):
 		song.fontcolor = form.red.data * 1000000 + form.green.data * 1000 + form.blue.data
 		flash('修改成功')
 		db.session.add(song)
+
 		return redirect(url_for('.music', id=song.id))
+	
 	form.songid.data = song.songid
 	form.title.data = converted_title
 	form.alias.data = converted_alias
@@ -238,14 +251,83 @@ def music(id):
 	form.red.data = math.floor(song.fontcolor / 1000000)
 	form.green.data = math.floor(song.fontcolor / 1000) % 1000
 	form.blue.data = song.fontcolor % 1000
+
 	return render_template('music.html', song=song, form=form, converted_title=converted_title, 
 		version=vername[song.version], converted_artist=converted_artist, converted_genre=converted_genre, 
 		converted_alias=converted_alias, converted_bganame=converted_bganame, converted_fontcolor=converted_fontcolor)
 
-@main.route('/add')
+@main.route('/add', methods=['GET', 'POST'])
 def add():
-	abort(404)
-	return render_template('add.html')
+	version = Version.query.get_or_404(1)
+	form = EditMusicForm(vername)
+
+	if form.validate_on_submit():
+		song = Song()
+		check_song = Song.query.filter_by(songid=form.songid.data).first()
+		if check_song is not None:
+			flash('该歌曲ID已存在！')
+			return redirect(url_for('.add'))
+		song.songid = form.songid.data
+		try:
+			song.title = form.title.data.encode('shift-jis')
+			song.alias = form.alias.data.encode('shift-jis')
+			song.genre = form.genre.data.encode('shift-jis')
+			song.artist = form.artist.data.encode('shift-jis')
+			song.bganame = form.bganame.data.encode('shift-jis')
+		except UnicodeEncodeError as e:
+			flash('部分信息无法编码为Shift-JIS：' + str(e))
+			return redirect(url_for('.add'))
+		song.version = form.version.data
+		song.spn = form.spn.data
+		song.sph = form.sph.data
+		song.spa = form.spa.data
+		song.dpn = form.dpn.data
+		song.dph = form.dph.data
+		song.dpa = form.dpa.data
+		song.spb = form.spb.data
+		song.volume = form.volume.data
+		song.bgadelay = form.bgadelay.data
+		song.font = form.font.data
+		song.otherfolder = form.otherfolder.data
+		song.fontcolor = form.red.data * 1000000 + form.green.data * 1000 + form.blue.data
+		flash('添加成功')
+		db.session.add(song)
+		version.totalsongs = version.totalsongs + 1
+		db.session.add(version)
+		anosong = Song.query.filter_by(songid=song.songid).first()
+		return redirect(url_for('.music', id=anosong.id))
+	
+	form.spn.data = 0
+	form.sph.data = 0
+	form.spa.data = 0
+	form.dpn.data = 0
+	form.dph.data = 0
+	form.dpa.data = 0
+	form.spb.data = 0
+	form.volume.data = 70
+	form.bgadelay.data = 5
+	form.font.data = 0
+	form.red.data = 0
+	form.green.data = 0
+	form.blue.data = 0
+
+	return render_template('add.html', form=form)
+
+@main.route('/header', methods=['GET', 'POST'])
+def header():
+	form = EditHeaderForm(vername)
+	version = Version.query.get_or_404(1)
+
+	if form.validate_on_submit():
+		version.gamever = form.gamever.data
+		version.totalslots = form.slots.data
+		db.session.add(version)
+		return redirect(url_for('.header'))
+	
+	form.gamever.data = version.gamever
+	form.slots.data = version.totalslots
+
+	return render_template('header.html', form=form)
 
 @main.route('/exporter')
 def exporter():
@@ -257,6 +339,7 @@ def exporter():
 	converted_aliases = []
 	converted_bganames = []
 	converted_fontcolors = []
+
 	if allsongs != []:
 		for song in allsongs:
 			songs.append(song)
@@ -288,10 +371,49 @@ def exporter():
 			converted_fontcolor = [math.floor(song.fontcolor / 1000000), 
 				math.floor(song.fontcolor / 1000) % 1000, song.fontcolor % 1000]
 			converted_fontcolors.append(converted_fontcolor)
+	
 	return render_template('exporter.html', vername=vername, songs=songs,
 		converted_titles=converted_titles, converted_artists=converted_artists,
 		converted_genres=converted_genres, converted_aliases=converted_aliases,
 		converted_bganames=converted_bganames, converted_fontcolors=converted_fontcolors)
+
+@main.route('/downloader')
+def downloader():
+	filename = 'export' + str(request.remote_addr).replace('.', '') + '.bin'
+	version = Version.query.get_or_404(1)
+	songs = Song.query.all()
+	rawdata = Rawdata.query.all()
+	header = b'\x49\x49\x44\x58' + version.gamever.to_bytes(1, 'little') + bytes(3) \
+		+ version.totalsongs.to_bytes(2, 'little') + version.totalslots.to_bytes(2, 'little') + bytes(4)
+	p = 0
+	slots = bytes()
+	for i in range(0, version.totalslots):
+		if p < version.totalsongs and i == songs[p].songid:
+			slots += p.to_bytes(2, 'little')
+			p = p + 1
+		else:
+			slots += b'\xff\xff'
+	songdat = bytes()
+	for i in range(0, version.totalsongs):
+		songdat += rawdata[i].block0
+		songdat += rawdata[i].block1
+		songdat += rawdata[i].block2
+		songdat += rawdata[i].block3
+		songdat += rawdata[i].block4
+		songdat += rawdata[i].block5
+		songdat += rawdata[i].block6
+		songdat += rawdata[i].block7
+		songdat += rawdata[i].block8
+		songdat += rawdata[i].block9
+		songdat += rawdata[i].block10
+		songdat += rawdata[i].block11
+		songdat += rawdata[i].block12
+	with open('app/static/workfiles/' + filename, 'wb') as f:
+		f.write(header)
+		f.write(slots)
+		f.write(songdat)
+	filename = 'workfile/' + filename
+	return render_template('downloader.html', filename=filename)
 
 @main.after_app_request
 def after_request(response):

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}music data manager - add music{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>导出成功，点击按钮下载</h1>
+</div>
+<div class="row">
+	<center><a class="btn btn-danger" href="{{ url_for('static', filename = filename) }}" download>下载</a></center>
+</div>
+{% endblock %}

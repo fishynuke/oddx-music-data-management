@@ -13,6 +13,12 @@
 </div>
 {% else %}
 <div class="row">
+	<div class="col-md-4">
+		{{ wtf.quick_form(form) }}
+	</div>
+</div>
+<hr>
+<div class="row">
 	<div class="col-md-8">
 		<table id="students">
 		{% for i in range(0, vername|length) %}

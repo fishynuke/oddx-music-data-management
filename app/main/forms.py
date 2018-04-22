@@ -33,8 +33,21 @@ class EditMusicForm(FlaskForm):
 	green = IntegerField('字体颜色绿', validators=[NumberRange(0, 255)])
 	blue = IntegerField('字体颜色蓝', validators=[NumberRange(0, 255)])
 	otherfolder = BooleanField('放进OTHERS文件夹？')
-	submit = SubmitField('更改信息')
+	submit = SubmitField('提交')
 
-	def __init__(self, song, vername, *args, **kwargs):
+	def __init__(self, vername, *args, **kwargs):
 		super(EditMusicForm, self).__init__(*args, **kwargs)
 		self.version.choices = [(vername.index(vers), vers) for vers in vername]
+
+class SearchForm(FlaskForm):
+	songid = IntegerField('跳转歌曲ID', validators=[Required(), NumberRange(1000, 100000)])
+	submit = SubmitField('跳转')
+
+class EditHeaderForm(FlaskForm):
+	gamever = SelectField('游戏版本', coerce=int)
+	slots = IntegerField('歌曲Slot总数', validators=[Required(), NumberRange(25000, 100000)])
+	submit = SubmitField('提交')
+
+	def __init__(self, vername, *args, **kwargs):
+		super(EditHeaderForm, self).__init__(*args, **kwargs)
+		self.gamever.choices = [(vername.index(vers), vers) for vers in vername]

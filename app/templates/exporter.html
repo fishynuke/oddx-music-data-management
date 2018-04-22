@@ -5,7 +5,8 @@
 
 {% block page_content %}
 <div class="page-header">
-    <h1>信息导出与下载</h1>
+	<h1>信息导出与下载</h1>
+	<h3>检查无误后到表格底部进行导出</h3>
 </div>
 {% if songs == [] %}
 <div>
@@ -57,6 +58,10 @@
 			{% endfor %}
 		</table>
 	</div>
+</div>
+<hr>
+<div class="row">
+	<center><a class="btn btn-danger" href="{{ url_for('.downloader') }}">确认导出</a></center>
 </div>
 {% endif %}
 {% endblock %}
