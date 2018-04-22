@@ -107,3 +107,4 @@ stuwork/
 migrations/
 
 .vscode/
+.bin
