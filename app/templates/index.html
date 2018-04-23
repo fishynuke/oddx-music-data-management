@@ -5,14 +5,14 @@
 <div class="page-header">
 	<h1>欢迎使用ODDX music data manager！</h1>
 	{% if version %}
-		<h3>最新文件修改时间：{{ version.modtime }}<br>
+		<h3><!--最新文件修改时间：{{ version.modtime }}<br>-->
 		版本：{{ gtext }}</h3>
 	{% else %}
 		<h3>暂时没有数据，请上传新文件。</h3>
 	{% endif %}
 </div>
 <div class="row">
-	<h3>&nbsp;&nbsp;注意：上传新文件会将数据库内原有数据清除。</h3>
+	<h3>&nbsp;&nbsp;注意：上传新文件会将数据库内原有数据清除。上传与分析过程可能持续十秒以上，请耐心等候。</h3>
 </div>
 <div class="row">
 	<div class="col-md-4">

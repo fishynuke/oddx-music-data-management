@@ -10,13 +10,13 @@ vername = ["1st style", "substream", "2nd style", "3rd style", "4th style", "5th
 			"6th style", "7th style", "8th style", "9th style", "10th style", "IIDX RED",
 			"HAPPY SKY", "DistorteD", "GOLD", "DJ TROOPERS", "EMPRESS", "SIRIUS", "Resort Anthem",
 			"Lincle", "tricoro", "SPADA", "PENDUAL", "copula", "SINOBUZ", "CANNON BALLERS"]
+blksize = 64
+headersize = 16
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
 	form = WorkUploadForm()
-	blksize = 64
 	pointer = 0
-	headersize = 16
 	version = Version.query.get(1)
 	if version is not None:
 		gamever_text = vername[version.gamever]
@@ -30,10 +30,15 @@ def index():
 		workfile = form.workfile.data
 		filename = 'music_data_' + str(request.remote_addr).replace('.', '') + '.bin'
 		save_path = os.path.join(upload_folder, filename)
+		workfile.save(save_path)
 
+		modtime = time.ctime(os.path.getmtime(save_path))
+		workfile.seek(pointer)
 		infoline = workfile.read(headersize)
 		pointer = pointer + headersize
 		if len(infoline) != 16 or infoline[0:4] != b'IIDX':
+			print(len(infoline))
+			print(infoline)
 			flash('文件头有问题！')
 			return redirect(url_for('.index'))
 		if int(infoline[4]) > 25:
@@ -42,8 +47,6 @@ def index():
 		gamever = int(infoline[4])
 		totalsongs = int(infoline[9]) * 16 * 16 + int(infoline[8])
 		totalslots = int(infoline[11]) * 16 * 16 + int(infoline[10])
-		workfile.save(save_path)
-		modtime = time.ctime(os.path.getmtime(save_path))
 		if version is None:
 			version = Version(gamever=gamever, modtime=modtime, totalsongs=totalsongs, totalslots=totalslots)
 		else:
@@ -171,6 +174,7 @@ def management():
 @main.route('/music/<int:id>', methods=['GET', 'POST'])
 def music(id):
 	song = Song.query.get_or_404(id)
+	rawdata = Rawdata.query.filter_by(songid=song.songid).first()
 	try:
 		converted_title = song.title.decode('shift-jis')
 	except UnicodeDecodeError as e:
@@ -198,36 +202,72 @@ def music(id):
 		converted_bganame = song.bganame
 	converted_fontcolor = [math.floor(song.fontcolor / 1000000), 
 		math.floor(song.fontcolor / 1000) % 1000, song.fontcolor % 1000]
+	
 	form = EditMusicForm(vername)
-
 	if form.validate_on_submit():
+		newblock4 = bytearray(rawdata.block4)
+		newblock7 = bytearray(rawdata.block7)
 		if song.songid != form.songid.data:
 			check_song = Song.query.filter_by(songid=form.songid.data).first()
 			if check_song is not None:
 				flash('该歌曲ID已存在！')
 				return redirect(url_for('.music', id=song.id))
 			song.songid = form.songid.data
+			rawdata.songid = form.songid.data
+			newsongid = rawdata.songid.to_bytes(2, 'little')
+			newblock7[8] = newsongid[0]
+			newblock7[9] = newsongid[1]
 		song.title = form.title.data.encode('shift-jis')
+		rawdata.block0 = song.title + bytes(blksize - len(song.title))
 		song.alias = form.alias.data.encode('shift-jis')
+		rawdata.block1 = song.alias + bytes(blksize - len(song.alias))
 		song.genre = form.genre.data.encode('shift-jis')
+		rawdata.block2 = song.genre + bytes(blksize - len(song.genre))
 		song.artist = form.artist.data.encode('shift-jis')
-		song.version = form.version.data
-		song.spn = form.spn.data
-		song.sph = form.sph.data
-		song.spa = form.spa.data
-		song.dpn = form.dpn.data
-		song.dph = form.dph.data
-		song.dpa = form.dpa.data
-		song.spb = form.spb.data
-		song.volume = form.volume.data
-		song.bgadelay = form.bgadelay.data
-		song.bganame = form.bganame.data.encode('shift-jis')
-		song.font = form.font.data
-		song.otherfolder = form.otherfolder.data
+		rawdata.block3 = song.artist + bytes(blksize - len(song.artist) - 4)
 		song.fontcolor = form.red.data * 1000000 + form.green.data * 1000 + form.blue.data
+		if song.fontcolor != 0:
+			rawdata.block3 += form.red.data.to_bytes(1, 'little') \
+			+ form.green.data.to_bytes(1, 'little') \
+			+ form.blue.data.to_bytes(1, 'little') + b'\x01'
+		else:
+			rawdata.block3 += bytes(4)
+		song.version = int(form.version.data)
+		newblock4[24] = song.version
+		song.spn = form.spn.data
+		newblock4[32] = form.spn.data
+		song.sph = form.sph.data
+		newblock4[33] = form.sph.data
+		song.spa = form.spa.data
+		newblock4[34] = form.spa.data
+		song.dpn = form.dpn.data
+		newblock4[35] = form.dpn.data
+		song.dph = form.dph.data
+		newblock4[36] = form.dph.data
+		song.dpa = form.dpa.data
+		newblock4[37] = form.dpa.data
+		song.spb = form.spb.data
+		newblock4[38] = form.spb.data
+		song.volume = form.volume.data
+		newblock7[12] = form.volume.data
+		song.bgadelay = form.bgadelay.data
+		newdelay = form.bgadelay.data.to_bytes(2, 'little', signed=True)
+		newblock7[24] = newdelay[0]
+		newblock7[25] = newdelay[1]
+		song.bganame = form.bganame.data.encode('shift-jis')
+		newblock7[28:48] = song.bganame + bytes(20 - len(song.bganame))
+		song.font = form.font.data
+		newblock4[20] = form.font.data
+		song.otherfolder = form.otherfolder.data
+		if form.otherfolder.data:
+			newblock4[26] = 1
+		else:
+			newblock4[26] = 0
 		flash('修改成功')
+		rawdata.block4 = bytes(newblock4)
+		rawdata.block7 = bytes(newblock7)
 		db.session.add(song)
-
+		db.session.add(rawdata)
 		return redirect(url_for('.music', id=song.id))
 	
 	form.songid.data = song.songid
@@ -260,14 +300,20 @@ def music(id):
 def add():
 	version = Version.query.get_or_404(1)
 	form = EditMusicForm(vername)
-
 	if form.validate_on_submit():
 		song = Song()
+		rawdata = Rawdata()
+		newblock4 = bytearray(blksize)
+		newblock7 = bytearray(blksize)
 		check_song = Song.query.filter_by(songid=form.songid.data).first()
 		if check_song is not None:
 			flash('该歌曲ID已存在！')
 			return redirect(url_for('.add'))
 		song.songid = form.songid.data
+		rawdata.songid = form.songid.data
+		newsongid = rawdata.songid.to_bytes(2, 'little')
+		newblock7[8] = newsongid[0]
+		newblock7[9] = newsongid[1]
 		try:
 			song.title = form.title.data.encode('shift-jis')
 			song.alias = form.alias.data.encode('shift-jis')
@@ -277,23 +323,64 @@ def add():
 		except UnicodeEncodeError as e:
 			flash('部分信息无法编码为Shift-JIS：' + str(e))
 			return redirect(url_for('.add'))
-		song.version = form.version.data
-		song.spn = form.spn.data
-		song.sph = form.sph.data
-		song.spa = form.spa.data
-		song.dpn = form.dpn.data
-		song.dph = form.dph.data
-		song.dpa = form.dpa.data
-		song.spb = form.spb.data
-		song.volume = form.volume.data
-		song.bgadelay = form.bgadelay.data
-		song.font = form.font.data
-		song.otherfolder = form.otherfolder.data
+		rawdata.block0 = song.title + bytes(blksize - len(song.title))
+		rawdata.block1 = song.alias + bytes(blksize - len(song.alias))
+		rawdata.block2 = song.genre + bytes(blksize - len(song.genre))
+		rawdata.block3 = song.artist + bytes(blksize - len(song.artist) - 4)
 		song.fontcolor = form.red.data * 1000000 + form.green.data * 1000 + form.blue.data
-		flash('添加成功')
+		if song.fontcolor != 0:
+			rawdata.block3 += form.red.data.to_bytes(1, 'little') \
+			+ form.green.data.to_bytes(1, 'little') \
+			+ form.blue.data.to_bytes(1, 'little') + b'\x01'
+		else:
+			rawdata.block3 += bytes(4)
+		song.version = int(form.version.data)
+		newblock4[24] = song.version
+		song.spn = form.spn.data
+		newblock4[32] = form.spn.data
+		song.sph = form.sph.data
+		newblock4[33] = form.sph.data
+		song.spa = form.spa.data
+		newblock4[34] = form.spa.data
+		song.dpn = form.dpn.data
+		newblock4[35] = form.dpn.data
+		song.dph = form.dph.data
+		newblock4[36] = form.dph.data
+		song.dpa = form.dpa.data
+		newblock4[37] = form.dpa.data
+		song.spb = form.spb.data
+		newblock4[38] = form.spb.data
+		song.volume = form.volume.data
+		newblock7[12] = form.volume.data
+		song.bgadelay = form.bgadelay.data
+		newdelay = form.bgadelay.data.to_bytes(2, 'little', signed=True)
+		newblock7[16:24] = bytes([48] * 8)
+		newblock7[24] = newdelay[0]
+		newblock7[25] = newdelay[1]
+		song.bganame = form.bganame.data.encode('shift-jis')
+		newblock7[28:48] = song.bganame + bytes(20 - len(song.bganame))
+		song.font = form.font.data
+		newblock4[20] = form.font.data
+		song.otherfolder = form.otherfolder.data
+		if form.otherfolder.data:
+			newblock4[26] = 1
+		else:
+			newblock4[26] = 0
+		newblock4[30] = 1
+		rawdata.block4 = bytes(newblock4)
+		rawdata.block7 = bytes(newblock7)
+		rawdata.block5 = bytes(blksize)
+		rawdata.block6 = bytes(blksize)
+		rawdata.block8 = bytes(blksize)
+		rawdata.block9 = bytes(blksize)
+		rawdata.block10 = bytes(blksize)
+		rawdata.block11 = bytes(blksize)
+		rawdata.block12 = bytes(blksize)
 		db.session.add(song)
+		db.session.add(rawdata)
 		version.totalsongs = version.totalsongs + 1
 		db.session.add(version)
+		flash('添加成功')
 		anosong = Song.query.filter_by(songid=song.songid).first()
 		return redirect(url_for('.music', id=anosong.id))
 	
@@ -331,7 +418,7 @@ def header():
 
 @main.route('/exporter')
 def exporter():
-	allsongs = Song.query.all()
+	allsongs = Song.query.order_by(Song.songid).all()
 	songs = []
 	converted_titles = []
 	converted_artists = []
@@ -381,8 +468,8 @@ def exporter():
 def downloader():
 	filename = 'export' + str(request.remote_addr).replace('.', '') + '.bin'
 	version = Version.query.get_or_404(1)
-	songs = Song.query.all()
-	rawdata = Rawdata.query.all()
+	songs = Song.query.order_by(Song.songid).all()
+	rawdata = Rawdata.query.order_by(Rawdata.songid).all()
 	header = b'\x49\x49\x44\x58' + version.gamever.to_bytes(1, 'little') + bytes(3) \
 		+ version.totalsongs.to_bytes(2, 'little') + version.totalslots.to_bytes(2, 'little') + bytes(4)
 	p = 0
@@ -412,7 +499,7 @@ def downloader():
 		f.write(header)
 		f.write(slots)
 		f.write(songdat)
-	filename = 'workfile/' + filename
+	filename = 'workfiles/' + filename
 	return render_template('downloader.html', filename=filename)
 
 @main.after_app_request
