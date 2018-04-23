@@ -28,7 +28,7 @@ def index():
 		if not os.path.exists(upload_folder):
 			os.makedirs(upload_folder)
 		workfile = form.workfile.data
-		filename = 'music_data_' + str(request.remote_addr).replace('.', '') + '.bin'
+		filename = 'music_data_' + str(request.remote_addr).replace('.', '_') + '.bin'
 		save_path = os.path.join(upload_folder, filename)
 		workfile.save(save_path)
 
@@ -41,10 +41,10 @@ def index():
 			print(infoline)
 			flash('文件头有问题！')
 			return redirect(url_for('.index'))
-		if int(infoline[4]) > 25:
+		gamever = infoline[4]
+		if gamever > 25:
 			flash('不支持该版本！')
 			return redirect(url_for('.index'))
-		gamever = int(infoline[4])
 		totalsongs = int(infoline[9]) * 16 * 16 + int(infoline[8])
 		totalslots = int(infoline[11]) * 16 * 16 + int(infoline[10])
 		if version is None:
@@ -296,6 +296,18 @@ def music(id):
 		version=vername[song.version], converted_artist=converted_artist, converted_genre=converted_genre, 
 		converted_alias=converted_alias, converted_bganame=converted_bganame, converted_fontcolor=converted_fontcolor)
 
+@main.route('/delete:<int:id>')
+def delete(id):
+	song = Song.query.get_or_404(id)
+	rawdata = Rawdata.query.get_or_404(id)
+	version = Version.query.get_or_404(1)
+	version.totalsongs = version.totalsongs - 1
+	db.session.delete(song)
+	db.session.delete(rawdata)
+	db.session.add(version)
+	flash('已删除歌曲')
+	return redirect(url_for('.management'))
+
 @main.route('/add', methods=['GET', 'POST'])
 def add():
 	version = Version.query.get_or_404(1)
@@ -466,7 +478,7 @@ def exporter():
 
 @main.route('/downloader')
 def downloader():
-	filename = 'export' + str(request.remote_addr).replace('.', '') + '.bin'
+	filename = 'export_' + str(request.remote_addr).replace('.', '_') + '.bin'
 	version = Version.query.get_or_404(1)
 	songs = Song.query.order_by(Song.songid).all()
 	rawdata = Rawdata.query.order_by(Rawdata.songid).all()

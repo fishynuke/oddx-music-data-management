@@ -8,6 +8,8 @@
     <h1>导出成功，点击按钮下载</h1>
 </div>
 <div class="row">
-	<center><a class="btn btn-danger" href="{{ url_for('static', filename = filename) }}" download>下载</a></center>
+    <div class="col-md-4">
+        <a class="btn btn-danger" href="{{ url_for('static', filename = filename) }}" download>下载</a>
+    </div>
 </div>
 {% endblock %}

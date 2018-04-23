@@ -37,10 +37,10 @@
 			<td>OTHERS文件夹</td></tr>
 			{% for song in songs %}
 			<tr><td>{{ '%05d' % song.songid }}</td>
-			<td>{{ converted_titles[song.id-1] }}</td>
-			<td>{{ converted_aliases[song.id-1] }}</td>
-			<td>{{ converted_genres[song.id-1] }}</td>
-			<td>{{ converted_artists[song.id-1] }}</td>
+			<td>{{ converted_titles[loop.index0] }}</td>
+			<td>{{ converted_aliases[loop.index0] }}</td>
+			<td>{{ converted_genres[loop.index0] }}</td>
+			<td>{{ converted_artists[loop.index0] }}</td>
 			<td>{{ vername[song.version] }}</td>
 			<td>{{ song.spn }}</td>
 			<td>{{ song.sph }}</td>
@@ -51,9 +51,9 @@
 			<td>{{ song.spb }}</td>
 			<td>{{ song.volume }}</td>
 			<td>{{ song.bgadelay }}</td>
-			<td>{{ converted_bganames[song.id-1] }}</td>
+			<td>{{ converted_bganames[loop.index0] }}</td>
 			<td>{{ song.font }}</td>
-			<td>{{ converted_fontcolors[song.id-1] }}</td>
+			<td>{{ converted_fontcolors[loop.index0] }}</td>
 			<td>{{ song.otherfolder }}</td></tr>
 			{% endfor %}
 		</table>

@@ -57,4 +57,10 @@
 		{{ wtf.quick_form(form) }}
 	</div>
 </div>
+<hr>
+<div class="row">
+	<div class="col-md-4">
+		<a class="btn btn-danger" href="{{ url_for('.delete', id=song.id) }}">删除歌曲</a>
+	</div>
+</div>
 {% endblock %}
